@@ -28,16 +28,39 @@ module Rouge
     def load!
       # noop
     end
+
+    # overridden with a `def self.detect?` in
+    # the cache file, but some classes don't
+    # define it. this is the default implementation.
+    def detect?(analyzer)
+      false
+    end
+
+    # for compat reasons, a LangSpec is considered == to the
+    # lexer class itself.
+    def ==(other)
+      return true if other.respond_to?(:tag) && other.tag == self.tag
+      super
+    end
+
+    ### abstract methods ###
+
+    def find_prop(prop)
+      raise 'abstract'
+    end
+
+    def lexer_class
+      raise 'abstract'
+    end
+
+    def name
+      raise 'abstract'
+    end
   end
 
   class BakedLangSpec < LangSpec
     def inspect
       "#<BakedLangSpec #{@lexer_class}>"
-    end
-
-    def ==(other)
-      return true if other == @lexer_class
-      super
     end
 
     attr_reader :lexer_class
@@ -61,11 +84,6 @@ module Rouge
       "#<CachedLangSpec:#{@const_name} #{@source_file}>"
     end
 
-    def ==(other)
-      return true if other.is_a?(Lexer) && other.tag == self.tag
-      super
-    end
-
     def initialize(source_file, const_name, &b)
       @const_name = const_name
       @source_file = source_file
@@ -80,13 +98,6 @@ module Rouge
     def lexer_class
       load! unless @lexer_class
       @lexer_class
-    end
-
-    # overridden with a `def self.detect?` in
-    # the cache file, but some classes don't
-    # define it. this is the default implementation.
-    def detect?(*)
-      false
     end
 
     def name
