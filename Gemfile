@@ -26,9 +26,9 @@ end
 gem 'git'
 gem 'yard'
 
-group :development do
-  gem 'pry'
+gem 'pry'
 
+group :development do
   # docs
   gem 'github-markup'
 
