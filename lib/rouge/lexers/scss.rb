@@ -3,7 +3,7 @@
 
 module Rouge
   module Lexers
-    load_lexer 'sass/common.rb'
+    preload_lexer 'sass/common'
 
     class Scss < SassCommon
       title "SCSS"

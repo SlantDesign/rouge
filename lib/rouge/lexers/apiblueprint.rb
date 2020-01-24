@@ -2,7 +2,7 @@
 
 module Rouge
   module Lexers
-    load_lexer 'markdown.rb'
+    preload_lexer 'markdown'
 
     class APIBlueprint < Markdown
       title 'API Blueprint'

@@ -526,12 +526,14 @@ module Rouge
   end
 
   module Lexers
-    @_loaded_lexers = {}
-
-    def self.load_lexer(relpath)
-      return if @_loaded_lexers.key?(relpath)
-      @_loaded_lexers[relpath] = true
-      load File.join(__dir__, 'lexers', relpath)
+    def self.preload_lexer(tag)
+      lang = Lexer.find(tag)
+      if lang
+        lang.lexer_class
+      else
+        # needed during generate:cache
+        load "#{__dir__}/lexers/#{tag}.rb"
+      end
     end
 
     def self.const_missing(name)

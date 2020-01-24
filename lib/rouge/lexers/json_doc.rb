@@ -3,7 +3,7 @@
 
 module Rouge
   module Lexers
-    load_lexer 'json.rb'
+    preload_lexer 'json'
 
     class JSONDOC < JSON
       desc "JavaScript Object Notation with extensions for documentation"

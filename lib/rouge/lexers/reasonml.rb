@@ -3,7 +3,7 @@
 
 module Rouge
   module Lexers
-    load_lexer 'ocaml/common.rb'
+    preload_lexer 'ocaml/common'
 
     class ReasonML < OCamlCommon
       title "ReasonML"
