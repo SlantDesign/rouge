@@ -37,7 +37,7 @@ namespace :generate do
       out.puts
       out.puts "module Rouge"
 
-      Dir.glob('./lib/rouge/lexers/*.rb').each do |source_file|
+      Dir.glob('lib/rouge/lexers/*.rb').each do |source_file|
         load source_file
         lexer_cache_source(source_file, Rouge::Lexer.last_registered) do |line|
           out.puts line

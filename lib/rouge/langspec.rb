@@ -94,8 +94,10 @@ module Rouge
     end
 
     def load!
-      load @source_file
-      @lexer_class = Lexer.last_registered
+      LOAD_LOCK.synchronize do
+        load File.join(ROOT, @source_file)
+        @lexer_class = Lexer.last_registered
+      end
     end
   end
 end

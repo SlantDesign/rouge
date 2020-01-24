@@ -3,9 +3,13 @@
 
 # stdlib
 require 'pathname'
+require 'monitor'
 
 # The containing module for Rouge
 module Rouge
+  LOAD_LOCK = Monitor.new
+  ROOT = File.dirname(__dir__)
+
   class << self
     def reload!
       Object.send :remove_const, :Rouge
