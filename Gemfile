@@ -6,6 +6,8 @@ gemspec
 
 gem 'rake'
 
+gem 'method_source'
+
 gem 'minitest', '>= 5.0'
 gem 'minitest-power_assert'
 

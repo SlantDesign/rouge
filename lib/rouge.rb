@@ -52,7 +52,8 @@ load_relative 'rouge/lexer'
 load_relative 'rouge/regex_lexer'
 load_relative 'rouge/template_lexer'
 
-Dir.glob(lexer_dir('*rb')).each { |f| Rouge::Lexers.load_lexer(f.sub(lexer_dir, '')) }
+load_relative 'rouge/langspec'
+load_relative 'rouge/langspec_cache'
 
 load_relative 'rouge/guesser'
 load_relative 'rouge/guessers/util'

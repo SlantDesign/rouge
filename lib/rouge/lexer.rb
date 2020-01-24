@@ -13,8 +13,15 @@ module Rouge
     include Token::Tokens
 
     @option_docs = {}
+    @registry = {}
+    @lazy_constants = {}
 
     class << self
+      attr_reader :lazy_constants
+      def const_missing(name)
+        Lexer.lazy_constants.fetch(name) { super }.lexer_class
+      end
+
       # Lexes `stream` with the given options.  The lex is delegated to a
       # new instance.
       #
@@ -58,8 +65,8 @@ module Rouge
       def find_fancy(str, code=nil, additional_options={})
 
         if str && !str.include?('?') && str != 'guess'
-          lexer_class = find(str)
-          return lexer_class && lexer_class.new(additional_options)
+          lang = find(str)
+          return lang && lang.new(additional_options)
         end
 
         name, opts = str ? str.split('?', 2) : [nil, '']
@@ -77,14 +84,14 @@ module Rouge
 
         opts = additional_options.merge(Hash[opts])
 
-        lexer_class = case name
+        lang = case name
         when 'guess', nil
           self.guess(:source => code, :mimetype => opts['mimetype'])
         when String
           self.find(name)
         end
 
-        lexer_class && lexer_class.new(opts)
+        lang && lang.new(opts)
       end
 
       # Specify or get this lexer's title. Meant to be human-readable.
@@ -170,15 +177,15 @@ module Rouge
       # @see Lexer.guesses
       # @return [Class<Rouge::Lexer>]
       def guess(info={}, &fallback)
-        lexers = guesses(info)
+        langs = guesses(info)
 
-        return Lexers::PlainText if lexers.empty?
-        return lexers[0] if lexers.size == 1
+        return Lexers::PlainText if langs.empty?
+        return langs[0] if langs.size == 1
 
         if fallback
-          fallback.call(lexers)
+          fallback.call(langs)
         else
-          raise Guesser::Ambiguous.new(lexers)
+          raise Guesser::Ambiguous.new(langs)
         end
       end
 
@@ -212,12 +219,25 @@ module Rouge
         @detectable ||= methods(false).include?(:detect?)
       end
 
+      def cache(source_file, const_name, name, &b)
+        @lazy_constants[const_name] = registry[name.to_s] =
+          CachedLangSpec.new(source_file, const_name, &b)
+      end
+
+      attr_reader :last_registered
+
     protected
       # @private
       def register(name, lexer)
         # reset an existing list of lexers
         @all = nil if defined?(@all)
-        registry[name.to_s] = lexer
+        @last_registered = lexer
+        registry[name.to_s] = BakedLangSpec.new(lexer)
+      end
+
+      def register_alias(name, lexer)
+        raise 'no tag' unless lexer.tag
+        registry[name.to_s] = registry[lexer.tag]
       end
 
     public
@@ -248,8 +268,10 @@ module Rouge
       #
       #   Lexer.find('eruby') # => Erb
       def aliases(*args)
+        raise 'no tag!' unless tag
+
         args.map!(&:to_s)
-        args.each { |arg| Lexer.register(arg, self) }
+        args.each { |arg| Lexer.register_alias(arg, self) }
         (@aliases ||= []).concat(args)
       end
 
@@ -293,7 +315,7 @@ module Rouge
 
     private
       def registry
-        @registry ||= {}
+        @registry
       end
     end
 
@@ -352,8 +374,8 @@ module Rouge
       when Lexer
         val
       when String
-        lexer_class = Lexer.find(val)
-        lexer_class && lexer_class.new(@options)
+        lang = Lexer.find(val)
+        lang && lang.new(@options)
       end
     end
 
@@ -510,6 +532,14 @@ module Rouge
       return if @_loaded_lexers.key?(relpath)
       @_loaded_lexers[relpath] = true
       load File.join(__dir__, 'lexers', relpath)
+    end
+
+    def self.const_missing(name)
+      Lexer.lazy_constants.fetch(name) { super }
+    end
+
+    def self.preload!
+      Lexer.all.each(&:lexer_class)
     end
   end
 end

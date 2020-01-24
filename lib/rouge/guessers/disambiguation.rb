@@ -6,6 +6,10 @@ module Rouge
       include Util
       include Lexers
 
+      def self.const_missing(name)
+        Lexers.const_missing(name)
+      end
+
       def initialize(filename, source)
         @filename = File.basename(filename)
         @source = source
