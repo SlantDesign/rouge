@@ -6,8 +6,10 @@ module Rouge
       include Util
       include Lexers
 
+      # unlike Lexers.const_missing, this will return
+      # only the LangSpec without forcing it to load.
       def self.const_missing(name)
-        Lexers.const_missing(name)
+        Lexer.lazy_constants.fetch(name) { super }
       end
 
       def initialize(filename, source)
